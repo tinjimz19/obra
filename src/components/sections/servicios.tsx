@@ -26,7 +26,7 @@ const ICONOS: Record<IconKey, LucideIcon> = {
   mantenimiento: Wrench,
 };
 
-function ServicioCard({ servicio }: { servicio: Servicio }) {
+function ServicioCard({ servicio, index }: { servicio: Servicio; index: number }) {
   const reduced = useReducedMotionSafe();
   const Icon = ICONOS[servicio.icon];
 
@@ -67,10 +67,22 @@ function ServicioCard({ servicio }: { servicio: Servicio }) {
           className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-gradient-to-r from-brand via-brand/40 to-transparent transition-transform duration-500 group-hover:scale-x-100"
         />
 
-        <div className="relative">
-          <span className="inline-grid size-12 place-items-center rounded-lg border border-white/10 bg-steel-900 text-brand transition-colors duration-300 group-hover:border-brand/50 group-hover:bg-brand group-hover:text-black">
-            <Icon className="size-5" aria-hidden strokeWidth={1.75} />
+        {/* Barrido de luz al pasar el cursor */}
+        {!reduced && (
+          <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+            <span className="absolute -inset-y-2 left-0 w-1/3 -translate-x-[130%] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:animate-[fut-sheen_0.9s_ease-out] group-hover:opacity-100" />
           </span>
+        )}
+
+        <div className="relative">
+          <div className="flex items-start justify-between">
+            <span className="inline-grid size-12 place-items-center rounded-lg border border-white/10 bg-steel-900 text-brand transition-colors duration-300 group-hover:border-brand/50 group-hover:bg-brand group-hover:text-black">
+              <Icon className="size-5" aria-hidden strokeWidth={1.75} />
+            </span>
+            <span className="font-mono-hud text-[11px] tracking-widest text-white/25 transition-colors duration-300 group-hover:text-brand/70">
+              S-{String(index + 1).padStart(2, "0")}
+            </span>
+          </div>
 
           <h3 className="mt-6 text-xl font-semibold tracking-tight">{servicio.titulo}</h3>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
@@ -110,8 +122,8 @@ export function Servicios() {
         />
 
         <Stagger as="ul" className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" stagger={0.08}>
-          {servicios.map((servicio) => (
-            <ServicioCard key={servicio.titulo} servicio={servicio} />
+          {servicios.map((servicio, i) => (
+            <ServicioCard key={servicio.titulo} servicio={servicio} index={i} />
           ))}
         </Stagger>
       </div>

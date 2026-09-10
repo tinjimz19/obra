@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 
 import { cn } from "@/lib/utils";
 import { Reveal } from "@/components/ui/reveal";
+import { ScrambleText } from "@/components/ui/futuristic";
 import { useReducedMotionSafe } from "@/hooks/use-reduced-motion-safe";
 import { EASE_OUT, viewportOnce } from "@/lib/motion";
 
@@ -37,7 +38,7 @@ export function SectionHeading({
     >
       <Reveal distance={16}>
         <span className="eyebrow">
-          <span className="text-muted-foreground/70">{numero}</span>
+          <span className="font-mono-hud text-muted-foreground/70">[{numero}]</span>
           <motion.span
             aria-hidden
             className="inline-block h-px bg-brand"
@@ -46,7 +47,13 @@ export function SectionHeading({
             viewport={viewportOnce}
             transition={{ duration: 0.7, ease: EASE_OUT, delay: 0.1 }}
           />
-          {eyebrow}
+          <ScrambleText text={eyebrow} startDelay={0.15} />
+          <motion.span
+            aria-hidden
+            className="inline-block h-3.5 w-px bg-brand"
+            animate={reduced ? undefined : { opacity: [1, 1, 0, 0, 1] }}
+            transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
+          />
         </span>
       </Reveal>
 

@@ -8,6 +8,7 @@ import { Proceso } from "@/components/sections/proceso";
 import { Testimonios } from "@/components/sections/testimonios";
 import { CTA } from "@/components/sections/cta";
 import { Footer } from "@/components/sections/footer";
+import { SectionDivider } from "@/components/ui/futuristic";
 import { empresa } from "@/lib/data";
 
 /** Datos estructurados para buscadores (ficha de negocio local). */
@@ -45,8 +46,11 @@ export default function Home() {
         <Servicios />
         <Stats />
         <Proyectos />
+        <SectionDivider />
         <Nosotros />
+        <SectionDivider />
         <Proceso />
+        <SectionDivider />
         <Testimonios />
         <CTA />
       </main>

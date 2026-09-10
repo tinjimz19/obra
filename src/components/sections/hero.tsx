@@ -30,6 +30,7 @@ import { useReducedMotionSafe } from "@/hooks/use-reduced-motion-safe";
 import { ElegantDarkPattern } from "@/components/ui/elegant-dark-pattern";
 import { MagnetizeButton } from "@/components/ui/magnetize-button";
 import { TextRewind } from "@/components/ui/text-rewind";
+import { ScanBeam, ScrambleText } from "@/components/ui/futuristic";
 
 const item = {
   hidden: { opacity: 0, y: 26 },
@@ -95,7 +96,11 @@ function FloatingScreen({ reduced, coarse }: { reduced: boolean; coarse: boolean
   const current = SLIDES[index];
 
   return (
-    <div className="[perspective:1600px]">
+    <motion.div
+      className="[perspective:1600px]"
+      animate={reduced || coarse ? undefined : { y: [0, -10, 0] }}
+      transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+    >
       {/* Keyframes Ken Burns autocontenidos (no dependen de globals.css) */}
       <style>{`
         @keyframes kenburns-a {
@@ -179,6 +184,19 @@ function FloatingScreen({ reduced, coarse }: { reduced: boolean; coarse: boolean
           <motion.span aria-hidden className="absolute inset-0 z-20 mix-blend-screen" style={{ background: glare }} />
         )}
 
+        {/* Líneas de escaneo + barrido tipo cámara de obra */}
+        <span aria-hidden className="pointer-events-none absolute inset-0 z-10 scanlines opacity-40" />
+        <ScanBeam duration={5} />
+
+        {/* Lectura HUD: estado de grabación y coordenadas de obra */}
+        <div className="absolute left-4 top-11 z-20 font-mono-hud text-[10px] leading-relaxed text-white/70 sm:left-6 sm:top-14">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block size-1.5 rounded-full bg-red-500 animate-pulse-soft" />
+            REC · SITE {String(index + 1).padStart(2, "0")}/{String(SLIDES.length).padStart(2, "0")}
+          </span>
+          <span className="text-white/45">25.79°N 80.34°W</span>
+        </div>
+
         {/* Esquinas tipo visor técnico */}
         <span aria-hidden className="absolute left-4 top-4 z-20 size-6 rounded-tl-md border-l-2 border-t-2 border-brand/70 sm:left-6 sm:top-6" />
         <span aria-hidden className="absolute right-4 top-4 z-20 size-6 rounded-tr-md border-r-2 border-t-2 border-white/25 sm:right-6 sm:top-6" />
@@ -222,7 +240,7 @@ function FloatingScreen({ reduced, coarse }: { reduced: boolean; coarse: boolean
           ))}
         </div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -276,7 +294,7 @@ export function Hero() {
                 <span className="absolute inline-flex size-full animate-ping rounded-full bg-brand opacity-70" />
                 <span className="relative inline-flex size-2 rounded-full bg-brand" />
               </span>
-              Constructora general · Licencia CGC-1528904
+              <ScrambleText text="Constructora general · Licencia CGC-1528904" className="font-mono-hud" startDelay={0.6} />
             </span>
           </motion.div>
 

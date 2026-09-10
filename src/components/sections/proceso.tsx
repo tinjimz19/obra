@@ -10,7 +10,7 @@
  */
 
 import * as React from "react";
-import { motion, useInView, useScroll, useSpring } from "motion/react";
+import { motion, useInView, useMotionTemplate, useScroll, useSpring, useTransform } from "motion/react";
 
 import { cn } from "@/lib/utils";
 import { proceso, type Paso } from "@/lib/data";
@@ -92,6 +92,7 @@ export function Proceso() {
     offset: ["start 65%", "end 60%"],
   });
   const trazo = useSpring(scrollYProgress, { stiffness: 120, damping: 30, restDelta: 0.001 });
+  const cometTop = useMotionTemplate`${useTransform(trazo, [0, 1], [0, 94])}%`;
 
   return (
     <section aria-labelledby="proceso-titulo" className="relative py-24 sm:py-32">
@@ -119,6 +120,16 @@ export function Proceso() {
             style={reduced ? { scaleY: 1 } : { scaleY: trazo }}
             className="absolute left-[17px] top-1 h-[calc(100%-2rem)] w-px origin-top bg-gradient-to-b from-brand via-brand to-brand/30 sm:left-[21px]"
           />
+          {/* Pulso de energía que viaja por la línea siguiendo el scroll */}
+          {!reduced && (
+            <motion.span
+              aria-hidden
+              style={{ top: cometTop }}
+              className="absolute left-[17px] z-10 -translate-x-1/2 sm:left-[21px]"
+            >
+              <span className="block size-2.5 rounded-full bg-brand shadow-[0_0_16px_4px_rgba(255,106,26,0.7)]" />
+            </motion.span>
+          )}
 
           <ol ref={listRef} className="relative">
             {proceso.map((paso, i) => (

@@ -20,6 +20,7 @@ import { Input, Select } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MagnetizeButton } from "@/components/ui/magnetize-button";
 import { Reveal } from "@/components/ui/reveal";
+import { EnergyBorder, ScanBeam } from "@/components/ui/futuristic";
 
 type Estado = "idle" | "enviando" | "ok" | "error";
 
@@ -73,6 +74,8 @@ export function CTA() {
             animate={reduced ? undefined : { scale: [1, 1.18, 1], opacity: [0.5, 0.8, 0.5] }}
             transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
           />
+          <span aria-hidden className="pointer-events-none absolute inset-0 scanlines opacity-25" />
+          <ScanBeam duration={6} className="h-1/2" />
 
           <div className="relative grid gap-10 p-8 sm:p-12 lg:grid-cols-2 lg:gap-16 lg:p-16">
             {/* Copy */}
@@ -108,7 +111,7 @@ export function CTA() {
             </div>
 
             {/* Formulario */}
-            <div className="relative">
+            <EnergyBorder rounded="rounded-2xl" className="relative" duration={9}>
               <AnimatePresence mode="wait">
                 {estado === "ok" ? (
                   <motion.div
@@ -223,7 +226,7 @@ export function CTA() {
                   </motion.form>
                 )}
               </AnimatePresence>
-            </div>
+            </EnergyBorder>
           </div>
         </motion.div>
 

@@ -15,7 +15,7 @@ import { motion, useMotionValue, useSpring, type HTMLMotionProps } from "motion/
 import { cn } from "@/lib/utils";
 import { useReducedMotionSafe } from "@/hooks/use-reduced-motion-safe";
 
-type Particle = { x: number; y: number; delay: number; size: number };
+type Particle = { x: number; y: number; delay: number; sizeClass: string };
 
 function createParticles(count: number): Particle[] {
   // Distribución determinista (nada de Math.random) para evitar
@@ -27,7 +27,11 @@ function createParticles(count: number): Particle[] {
       x: Math.cos(angle) * radius,
       y: Math.sin(angle) * radius * 0.55,
       delay: (i % 5) * 0.06,
-      size: i % 3 === 0 ? 3 : 2,
+      // El tamaño va como clase de Tailwind, no como estilo numérico: así el
+      // motion.span sólo lleva transform/opacity en su style inline y no hay
+      // width/height que discrepe entre servidor y cliente (evita el error de
+      // hidratación que Motion provoca al normalizar "2px" a 2).
+      sizeClass: i % 3 === 0 ? "size-[3px]" : "size-0.5",
     };
   });
 }
@@ -96,9 +100,9 @@ export const MagnetizeButton = React.forwardRef<HTMLButtonElement, MagnetizeButt
                 key={i}
                 className={cn(
                   "absolute left-1/2 top-1/2 rounded-full",
+                  p.sizeClass,
                   variant === "solid" ? "bg-black/45" : "bg-brand",
                 )}
-                style={{ width: p.size, height: p.size }}
                 initial={false}
                 animate={
                   hovered
