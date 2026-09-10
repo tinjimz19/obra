@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Tema oscuro único (industrial). Valores HSL para shadcn/ui. */
+    --background: 210 12% 5%;
+    --foreground: 210 16% 96%;
+
+    --card: 210 11% 8%;
+    --card-foreground: 210 16% 96%;
+
+    --muted: 210 9% 14%;
+    --muted-foreground: 214 8% 66%;
+
+    --primary: 21 100% 55%;
+    --primary-foreground: 24 90% 6%;
+
+    --secondary: 210 9% 14%;
+    --secondary-foreground: 210 16% 96%;
+
+    --accent: 21 100% 55%;
+    --accent-foreground: 24 90% 6%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 213 9% 18%;
+    --input: 213 9% 18%;
+    --ring: 21 100% 55%;
+
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    /* Compensa el navbar sticky al saltar entre secciones */
+    scroll-padding-top: 6rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "ss01", "cv01";
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    @apply bg-brand text-black;
+  }
+
+  /* Foco visible y consistente en toda la página */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tightest;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@layer components {
+  /* Etiqueta pequeña de sección: "01 — Servicios" */
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-brand;
+  }
+
+  /* Franja de peligro tipo cinta de obra */
+  .hazard-stripe {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      #ff6a1a 0 9px,
+      #23282e 9px 18px
+    );
+  }
+
+  .surface {
+    @apply border border-white/10 bg-white/[0.03] backdrop-blur-sm;
+  }
+
+  .text-outline {
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.22);
+    color: transparent;
+  }
+}
+
+@layer utilities {
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Barra de scroll discreta acorde a la paleta */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0b0d0f;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2f35;
+  border-radius: 999px;
+  border: 2px solid #0b0d0f;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3c434a;
+}
+
+/* ---------------------------------------------------------------
+   Accesibilidad: respeta prefers-reduced-motion.
+   Motion también lo respeta vía useReducedMotion() en los componentes,
+   esto cubre además las animaciones puramente CSS.
+---------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
