@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { motion } from "motion/react";
+import { motion, useScroll, useTransform } from "motion/react";
 
 import { cn } from "@/lib/utils";
 import { Reveal } from "@/components/ui/reveal";
@@ -27,15 +27,24 @@ export function SectionHeading({
   className,
 }: SectionHeadingProps) {
   const reduced = useReducedMotionSafe();
+  const ref = React.useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  // Parallax cinemático: todo el bloque del encabezado deriva junto mientras la
+  // sección cruza la pantalla (se mueve como una sola pieza, sin solaparse).
+  const blockY = useTransform(scrollYProgress, [0, 1], [34, -34]);
 
   return (
-    <div
-      className={cn(
-        "flex flex-col gap-4",
-        align === "center" && "items-center text-center",
-        className,
-      )}
-    >
+    <div ref={ref} className={className}>
+      <motion.div
+        style={reduced ? undefined : { y: blockY }}
+        className={cn(
+          "flex flex-col gap-4 will-change-transform",
+          align === "center" && "items-center text-center",
+        )}
+      >
       <Reveal distance={16}>
         <span className="eyebrow">
           <span className="font-mono-hud text-muted-foreground/70">[{numero}]</span>
@@ -57,16 +66,22 @@ export function SectionHeading({
         </span>
       </Reveal>
 
-      <Reveal distance={24} delay={0.05}>
-        <h2
-          className={cn(
-            "max-w-4xl text-balance text-4xl font-bold leading-[0.95] sm:text-5xl lg:text-6xl",
-            align === "center" && "mx-auto",
-          )}
-        >
-          {titulo}
-        </h2>
-      </Reveal>
+      <motion.h2
+        initial={
+          reduced
+            ? { opacity: 0 }
+            : { opacity: 0, y: 40, scale: 0.965, filter: "blur(14px)" }
+        }
+        whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+        viewport={viewportOnce}
+        transition={{ duration: 0.85, ease: EASE_OUT, delay: 0.05 }}
+        className={cn(
+          "max-w-4xl text-balance text-4xl font-bold leading-[0.95] will-change-transform sm:text-5xl lg:text-6xl",
+          align === "center" && "mx-auto",
+        )}
+      >
+        {titulo}
+      </motion.h2>
 
       {descripcion && (
         <Reveal distance={20} delay={0.12}>
@@ -80,6 +95,7 @@ export function SectionHeading({
           </p>
         </Reveal>
       )}
+      </motion.div>
     </div>
   );
 }

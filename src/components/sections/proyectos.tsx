@@ -10,7 +10,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useScroll, useTransform } from "motion/react";
 import { ArrowUpRight, MapPin, Ruler, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -30,6 +30,36 @@ const SPAN: Record<Proyecto["span"], string> = {
   wide: "sm:col-span-2",
   sm: "",
 };
+
+/**
+ * Media del bento con parallax de profundidad: la foto es más alta que la celda
+ * y se desplaza en Y según la posición de scroll. Direcciones/magnitudes
+ * alternadas por índice para que las celdas no se muevan al unísono.
+ */
+function BentoMedia({ p, index, reduced }: { p: Proyecto; index: number; reduced: boolean }) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const dir = index % 2 === 0 ? 1 : -1;
+  const amp = 14 + (index % 3) * 4; // 14–22% de recorrido
+  const y = useTransform(scrollYProgress, [0, 1], [`${-amp * dir}%`, `${amp * dir}%`]);
+
+  return (
+    <div ref={ref} className="absolute inset-0 overflow-hidden">
+      <motion.div
+        className="absolute inset-x-0 -inset-y-[24%]"
+        style={reduced ? undefined : { y }}
+      >
+        <Image
+          src={p.imagen}
+          alt={`${p.titulo} — ${p.categoria} en ${p.ubicacion}`}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+        />
+      </motion.div>
+    </div>
+  );
+}
 
 export function Proyectos() {
   const reduced = useReducedMotionSafe();
@@ -138,13 +168,7 @@ export function Proyectos() {
                   className="relative block size-full overflow-hidden rounded-xl border border-white/10 text-left"
                 >
                   <motion.div layoutId={reduced ? undefined : `img-${p.id}`} className="absolute inset-0">
-                    <Image
-                      src={p.imagen}
-                      alt={`${p.titulo} — ${p.categoria} en ${p.ubicacion}`}
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
-                    />
+                    <BentoMedia p={p} index={i} reduced={reduced} />
                   </motion.div>
 
                   <span

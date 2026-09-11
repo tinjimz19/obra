@@ -9,7 +9,17 @@ import { Testimonios } from "@/components/sections/testimonios";
 import { CTA } from "@/components/sections/cta";
 import { Footer } from "@/components/sections/footer";
 import { SectionDivider } from "@/components/ui/futuristic";
+import { VelocityMarquee } from "@/components/ui/marquee";
 import { empresa } from "@/lib/data";
+
+const especialidades = [
+  "Obra civil",
+  "Estructuras",
+  "Remodelaciones",
+  "Diseño y construcción",
+  "Acabados",
+  "Mantenimiento",
+];
 
 /** Datos estructurados para buscadores (ficha de negocio local). */
 const jsonLd = {
@@ -45,6 +55,11 @@ export default function Home() {
         <Hero />
         <Servicios />
         <Stats />
+        {/* Franja de especialidades que reacciona a la velocidad del scroll */}
+        <div className="relative overflow-hidden border-y border-white/10 bg-steel-950/60 py-3">
+          <VelocityMarquee items={especialidades} baseVelocity={2.4} />
+          <VelocityMarquee items={especialidades} baseVelocity={-2.4} variant="outline" />
+        </div>
         <Proyectos />
         <SectionDivider />
         <Nosotros />

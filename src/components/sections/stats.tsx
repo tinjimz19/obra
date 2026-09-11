@@ -10,7 +10,13 @@
  */
 
 import * as React from "react";
-import { animate, motion, useInView, useMotionValue } from "motion/react";
+import {
+  motion,
+  useScroll,
+  useSpring,
+  useTransform,
+  type MotionValue,
+} from "motion/react";
 
 import { kpis, type Kpi } from "@/lib/data";
 import { EASE_OUT, viewportOnce } from "@/lib/motion";
@@ -18,51 +24,54 @@ import { useReducedMotionSafe } from "@/hooks/use-reduced-motion-safe";
 import { Reveal, Stagger, StaggerItem } from "@/components/ui/reveal";
 import { ScrambleText, TechGridBackdrop } from "@/components/ui/futuristic";
 
-function Contador({ kpi }: { kpi: Kpi }) {
+/**
+ * Contador ligado al scroll ("scrub"): el número sube y baja según la posición
+ * de la sección en pantalla, como un panel de instrumentos. Sin movimiento,
+ * muestra el valor final. Escribe directo en el nodo (sin re-render por frame).
+ */
+function Contador({ kpi, progress }: { kpi: Kpi; progress: MotionValue<number> }) {
   const reduced = useReducedMotionSafe();
   const ref = React.useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, amount: 0.6 });
-  const value = useMotionValue(0);
 
   React.useEffect(() => {
     const node = ref.current;
     if (!node) return;
-
     if (reduced) {
-      node.textContent = String(kpi.valor);
+      node.textContent = kpi.valor.toLocaleString("es-ES");
       return;
     }
-    if (!inView) return;
-
-    const unsubscribe = value.on("change", (v) => {
-      node.textContent = Math.round(v).toLocaleString("es-ES");
-    });
-
-    const controls = animate(value, kpi.valor, {
-      duration: 1.9,
-      ease: EASE_OUT,
-    });
-
-    return () => {
-      controls.stop();
-      unsubscribe();
+    const render = (p: number) => {
+      const v = Math.round(kpi.valor * Math.max(0, Math.min(1, p)));
+      node.textContent = v.toLocaleString("es-ES");
     };
-  }, [inView, kpi.valor, reduced, value]);
+    render(progress.get());
+    const unsub = progress.on("change", render);
+    return () => unsub();
+  }, [kpi.valor, reduced, progress]);
 
   return (
-    <span
-      ref={ref}
-      aria-hidden
-      className="tabular-nums"
-    >
+    <span ref={ref} aria-hidden className="tabular-nums">
       0
     </span>
   );
 }
 
 export function Stats() {
+  const sectionRef = React.useRef<HTMLElement>(null);
+  // Progreso de scroll de la sección: alimenta los contadores y la barra.
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start 85%", "center 55%"],
+  });
+  const progress = useSpring(scrollYProgress, { stiffness: 90, damping: 26, restDelta: 0.001 });
+  const barScaleX = useTransform(progress, [0, 1], [0, 1]);
+
   return (
-    <section aria-labelledby="cifras-titulo" className="relative overflow-hidden pb-6 pt-20 sm:pb-8 sm:pt-24">
+    <section
+      ref={sectionRef}
+      aria-labelledby="cifras-titulo"
+      className="relative overflow-hidden pb-6 pt-20 sm:pb-8 sm:pt-24"
+    >
       {/* Franja de acento superior */}
       <motion.div
         aria-hidden
@@ -87,6 +96,18 @@ export function Stats() {
           </p>
         </Reveal>
 
+        {/* Barra de progreso de la sección (panel de control) */}
+        <div className="mt-6 flex items-center gap-3">
+          <span className="font-mono-hud text-[10px] text-muted-foreground/70">00</span>
+          <span className="relative h-1 flex-1 overflow-hidden rounded-full bg-white/10">
+            <motion.span
+              className="absolute inset-y-0 left-0 w-full origin-left rounded-full bg-gradient-to-r from-brand to-brand/40"
+              style={{ scaleX: barScaleX }}
+            />
+          </span>
+          <span className="font-mono-hud text-[10px] text-brand/70">100</span>
+        </div>
+
         <Stagger
           as="ul"
           className="mt-10 grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-4"
@@ -109,7 +130,7 @@ export function Stats() {
               </span>
               <div className="mt-1 flex items-baseline font-display text-5xl font-bold leading-none tracking-tightest sm:text-6xl lg:text-7xl">
                 {kpi.prefijo && <span className="text-brand">{kpi.prefijo}</span>}
-                <Contador kpi={kpi} />
+                <Contador kpi={kpi} progress={progress} />
                 {kpi.sufijo && <span className="text-brand">{kpi.sufijo}</span>}
                 {/* Valor accesible para lectores de pantalla */}
                 <span className="sr-only">
