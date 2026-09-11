@@ -30,6 +30,7 @@ import { useReducedMotionSafe } from "@/hooks/use-reduced-motion-safe";
 import { ElegantDarkPattern } from "@/components/ui/elegant-dark-pattern";
 import { MagnetizeButton } from "@/components/ui/magnetize-button";
 import { TextRewind } from "@/components/ui/text-rewind";
+import { ScanBeam, ScrambleText } from "@/components/ui/futuristic";
 
 const item = {
   hidden: { opacity: 0, y: 26 },
@@ -77,6 +78,13 @@ function FloatingScreen({ reduced, coarse }: { reduced: boolean; coarse: boolean
     [-10, 10],
     [30, 70],
   )}% ${useTransform(springX, [-10, 10], [70, 30])}%, rgba(255,255,255,0.14), transparent 55%)`;
+  // Parallax: la foto se desplaza en sentido contrario a la inclinación, como
+  // si estuviera por detrás del cristal (da sensación de profundidad).
+  const imgX = useTransform(springY, [-16, 16], [16, -16]);
+  const imgY = useTransform(springX, [-12, 12], [14, -14]);
+  // Las capas HUD (esquinas, rótulos) se adelantan un poco hacia el cursor.
+  const hudX = useTransform(springY, [-16, 16], [-8, 8]);
+  const hudY = useTransform(springX, [-12, 12], [-7, 7]);
 
   const onMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!interactive || !ref.current) return;
@@ -95,7 +103,11 @@ function FloatingScreen({ reduced, coarse }: { reduced: boolean; coarse: boolean
   const current = SLIDES[index];
 
   return (
-    <div className="[perspective:1600px]">
+    <motion.div
+      className="[perspective:1600px]"
+      animate={reduced || coarse ? undefined : { y: [0, -10, 0] }}
+      transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+    >
       {/* Keyframes Ken Burns autocontenidos (no dependen de globals.css) */}
       <style>{`
         @keyframes kenburns-a {
@@ -127,8 +139,12 @@ function FloatingScreen({ reduced, coarse }: { reduced: boolean; coarse: boolean
           className="pointer-events-none absolute inset-0 z-30 rounded-2xl ring-1 ring-inset ring-white/10 sm:rounded-3xl"
         />
 
-        {/* Pase de fotos con Ken Burns + crossfade */}
-        <div aria-hidden className="absolute inset-0">
+        {/* Pase de fotos con Ken Burns + crossfade (con parallax de profundidad) */}
+        <motion.div
+          aria-hidden
+          className="absolute inset-0"
+          style={interactive ? { x: imgX, y: imgY, scale: 1.08 } : undefined}
+        >
           {SLIDES.map((s, i) => {
             const active = i === index;
             return (
@@ -158,7 +174,7 @@ function FloatingScreen({ reduced, coarse }: { reduced: boolean; coarse: boolean
               </div>
             );
           })}
-        </div>
+        </motion.div>
 
         {/* Viñeta de lente + degradado inferior para legibilidad del texto */}
         <div
@@ -178,6 +194,22 @@ function FloatingScreen({ reduced, coarse }: { reduced: boolean; coarse: boolean
         {interactive && (
           <motion.span aria-hidden className="absolute inset-0 z-20 mix-blend-screen" style={{ background: glare }} />
         )}
+
+        {/* Líneas de escaneo + barrido tipo cámara de obra */}
+        <span aria-hidden className="pointer-events-none absolute inset-0 z-10 scanlines opacity-40" />
+        <ScanBeam duration={5} />
+
+        {/* Lectura HUD: estado de grabación y coordenadas de obra */}
+        <motion.div
+          style={interactive ? { x: hudX, y: hudY } : undefined}
+          className="absolute left-4 top-11 z-20 font-mono-hud text-[10px] leading-relaxed text-white/70 sm:left-6 sm:top-14"
+        >
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block size-1.5 rounded-full bg-red-500 animate-pulse-soft" />
+            REC · SITE {String(index + 1).padStart(2, "0")}/{String(SLIDES.length).padStart(2, "0")}
+          </span>
+          <span className="text-white/45">25.79°N 80.34°W</span>
+        </motion.div>
 
         {/* Esquinas tipo visor técnico */}
         <span aria-hidden className="absolute left-4 top-4 z-20 size-6 rounded-tl-md border-l-2 border-t-2 border-brand/70 sm:left-6 sm:top-6" />
@@ -222,7 +254,7 @@ function FloatingScreen({ reduced, coarse }: { reduced: boolean; coarse: boolean
           ))}
         </div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -243,6 +275,23 @@ export function Hero() {
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "14%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
+  // Parallax de fondo por cursor + foco de luz que sigue al puntero.
+  const interactive = !reduced && !coarse;
+  const pointerX = useMotionValue(0.5);
+  const pointerY = useMotionValue(0.5);
+  const bgX = useSpring(useTransform(pointerX, [0, 1], [18, -18]), { stiffness: 60, damping: 20 });
+  const bgY = useSpring(useTransform(pointerY, [0, 1], [12, -12]), { stiffness: 60, damping: 20 });
+  const spotX = useTransform(pointerX, [0, 1], ["0%", "100%"]);
+  const spotY = useTransform(pointerY, [0, 1], ["0%", "100%"]);
+  const spotlight = useMotionTemplate`radial-gradient(600px circle at ${spotX} ${spotY}, rgba(255,106,26,0.10), transparent 60%)`;
+
+  const onSectionMove = (e: React.PointerEvent<HTMLElement>) => {
+    if (!interactive || !ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    pointerX.set((e.clientX - rect.left) / rect.width);
+    pointerY.set((e.clientY - rect.top) / rect.height);
+  };
+
   const irA = (href: string) => {
     const el = document.querySelector(href);
     el?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
@@ -252,9 +301,26 @@ export function Hero() {
     <section
       id="inicio"
       ref={ref}
+      onPointerMove={onSectionMove}
       className="relative flex min-h-[100svh] items-center justify-center overflow-hidden py-28 sm:py-24"
     >
-      <ElegantDarkPattern />
+      {/* Fondo con parallax por cursor */}
+      <motion.div
+        aria-hidden
+        className="absolute inset-[-4%]"
+        style={interactive ? { x: bgX, y: bgY } : undefined}
+      >
+        <ElegantDarkPattern />
+      </motion.div>
+
+      {/* Foco de luz que sigue al puntero (profundidad/atmósfera) */}
+      {interactive && (
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-[1]"
+          style={{ background: spotlight }}
+        />
+      )}
 
       <motion.div
         style={reduced ? undefined : { y, opacity }}
@@ -276,7 +342,7 @@ export function Hero() {
                 <span className="absolute inline-flex size-full animate-ping rounded-full bg-brand opacity-70" />
                 <span className="relative inline-flex size-2 rounded-full bg-brand" />
               </span>
-              Constructora general · Licencia CGC-1528904
+              <ScrambleText text="Constructora general · Licencia CGC-1528904" className="font-mono-hud" startDelay={0.6} />
             </span>
           </motion.div>
 
